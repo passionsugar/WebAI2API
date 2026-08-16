@@ -56,6 +56,8 @@ npm run genkey
 npm start -- -xvfb -vnc
 ```
 
+If pnpm 11 reports `ERR_PNPM_IGNORED_BUILDS`, approve the two native build scripts and rerun the install: `pnpm approve-builds better-sqlite3 sharp`, then `pnpm install`.
+
 The first start creates `data/config.yaml` from `config.example.yaml`; put the generated key into `server.auth`. Point Codex's Responses provider at `http://127.0.0.1:3000/v1` with `wire_api = "responses"`. Configure OpenClaw's OpenAI-compatible provider with the same base URL, an environment-injected key, and a model returned by `/v1/models`; exact config keys vary by OpenClaw version.
 
 The current `docker-compose.yaml` still uses the upstream `foxhui/webai-2api:latest` image. Build the local `Dockerfile` if you need the Agent code.

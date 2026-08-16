@@ -92,6 +92,8 @@ npm run genkey
 npm start -- -xvfb -vnc
 ```
 
+如果 pnpm 11 的供应链策略提示 `ERR_PNPM_IGNORED_BUILDS`，先批准项目需要的本地构建脚本，再重跑安装：`pnpm approve-builds better-sqlite3 sharp`、`pnpm install`。
+
 首次启动会从 `config.example.yaml` 创建 `data/config.yaml`；把 `npm run genkey` 输出的 key 写入 `server.auth`，再配置浏览器实例和登录状态。Dockerfile 会从当前源码构建；现有 `docker-compose.yaml` 仍引用原版 `foxhui/webai-2api:latest`，不会自动包含本分支 Agent 代码。
 
 ### 已知限制
