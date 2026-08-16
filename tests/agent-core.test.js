@@ -53,6 +53,23 @@ test('tool definitions normalize Chat and Responses function shapes', () => {
     assert.equal(responsesTool.name, 'write_file');
 });
 
+test('Codex Responses built-in tools are ignored while unknown types remain invalid', () => {
+    const tools = normalizeToolDefinitions([
+        { type: 'web_search_preview' },
+        sampleTools()[0],
+        { type: 'computer_use_preview' },
+        { type: 'namespace', name: 'mcp__example__' }
+    ], { ignoreUnsupportedBuiltinTools: true });
+
+    assert.deepEqual(tools.map(tool => tool.name), ['read_file']);
+    expectAgentCode(
+        () => normalizeToolDefinitions([{ type: 'vendor_specific_tool' }], {
+            ignoreUnsupportedBuiltinTools: true
+        }),
+        AGENT_ERROR_CODES.UNSUPPORTED_BUILTIN_TOOL
+    );
+});
+
 test('tool argument validation is strict and does not coerce values', () => {
     const [tool] = sampleTools();
 

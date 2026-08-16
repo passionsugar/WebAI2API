@@ -17,6 +17,27 @@ export const DEFAULT_SECURITY_LIMITS = Object.freeze({
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const TOOL_NAME_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+// Codex and other Responses API clients advertise provider-side tools together
+// with their function tools.  WebAI2API cannot execute those provider-side
+// tools, but they should not prevent an otherwise valid request from reaching
+// the model.  Keep this list explicit so arbitrary malformed tool types still
+// fail validation instead of being silently accepted.
+export const IGNORABLE_OPENAI_BUILTIN_TOOL_TYPES = Object.freeze([
+    'code_interpreter',
+    'computer_use',
+    'computer_use_preview',
+    'file_search',
+    'image_generation',
+    'local_shell',
+    'mcp',
+    'namespace',
+    'shell',
+    'web_search',
+    'web_search_preview'
+]);
+
+const OPENAI_BUILTIN_TOOL_TYPES = new Set(IGNORABLE_OPENAI_BUILTIN_TOOL_TYPES);
 const ajv = new Ajv({
     allErrors: true,
     strict: false,
@@ -194,7 +215,16 @@ export function normalizeToolDefinitions(rawTools, options = {}) {
     }
 
     const names = new Set();
-    return rawTools.map((tool, index) => {
+    const ignoredBuiltinTypes = options.ignoreUnsupportedBuiltinTools === true
+        ? new Set([
+            ...OPENAI_BUILTIN_TOOL_TYPES,
+            ...(options.ignoredToolTypes || [])
+        ])
+        : null;
+    const normalizedTools = [];
+
+    rawTools.forEach((tool, index) => {
+        if (ignoredBuiltinTypes?.has(tool?.type)) return;
         const normalized = normalizeToolDefinition(tool, index, limits);
         if (names.has(normalized.name)) {
             throw new AgentError(
@@ -203,8 +233,10 @@ export function normalizeToolDefinitions(rawTools, options = {}) {
             );
         }
         names.add(normalized.name);
-        return normalized;
+        normalizedTools.push(normalized);
     });
+
+    return normalizedTools;
 }
 
 export function parseToolArguments(rawArguments, options = {}) {

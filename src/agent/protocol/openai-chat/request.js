@@ -81,7 +81,7 @@ export function normalizeOpenAIChatRequest(data, options) {
     }
 
     const model = assertSupportedTextModel(data.model, options);
-    const tools = normalizeToolDefinitions(data.tools || []);
+    const tools = normalizeToolDefinitions(data.tools || [], { ignoreUnsupportedBuiltinTools: true });
     const toolChoice = normalizeToolChoice(data.tool_choice);
     if (toolChoice.mode !== 'none' && tools.length === 0) {
         throw new AgentError(

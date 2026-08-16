@@ -6,6 +6,7 @@ export {
     validateAssistantTurn
 } from './core/state-machine.js';
 export {
+    IGNORABLE_OPENAI_BUILTIN_TOOL_TYPES,
     normalizeToolDefinitions,
     normalizeArgumentsObject,
     parseToolArguments,

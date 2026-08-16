@@ -108,3 +108,18 @@ test('Responses output and buffered stream expose standard function_call events'
     assert.equal(events.at(-1).type, 'response.completed');
     assert.equal(events.at(-1).response.id, 'resp_new');
 });
+
+test('Responses accepts Codex built-in tools alongside function tools', () => {
+    const request = normalizeOpenAIResponsesRequest({
+        model: 'chatgpt_text/gpt-instant',
+        input: 'hello',
+        tools: [
+            { type: 'web_search_preview' },
+            readTool,
+            { type: 'file_search' }
+        ],
+        stream: true
+    }, modelOptions);
+
+    assert.deepEqual(request.tools.map(tool => tool.name), ['read_file']);
+});

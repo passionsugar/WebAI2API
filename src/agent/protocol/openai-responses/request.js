@@ -212,7 +212,7 @@ export function normalizeOpenAIResponsesRequest(data, options) {
 
     const tools = data.tools === undefined
         ? (previousState?.tools || [])
-        : normalizeToolDefinitions(data.tools);
+        : normalizeToolDefinitions(data.tools, { ignoreUnsupportedBuiltinTools: true });
     const toolChoice = data.tool_choice === undefined
         ? (previousState?.toolChoice || { mode: 'auto' })
         : normalizeToolChoice(data.tool_choice);
