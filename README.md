@@ -59,6 +59,8 @@ agentCompatibility:
   nativePassThrough: false
   temporaryChat: true
   forceInitialToolChoice: false
+  # 对当前 Codex 网页工具链，可在确认网页账号已登录后使用：
+  # forceInitialToolName: shell_command
   forceSyntheticToolChoiceTurns: 0
   maxSyntheticToolRetries: 1
   retrySyntheticAutoFinal: false

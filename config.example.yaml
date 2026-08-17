@@ -14,7 +14,7 @@ agentCompatibility:
   # 某些网页模型在 AUTO 下会拒绝首个明确的工具步骤；仅对 Synthetic 首轮可选地强制 REQUIRED。
   # 保持 false 可严格保留客户端的 tool_choice=auto 语义。
   forceInitialToolChoice: false
-  # 可选：当首步必须是某个工具时填写名称（例如 exec）；不填写则只强制任一工具调用。
+  # 可选：当首步必须是某个工具时填写名称（例如 shell_command）；不填写则只强制任一工具调用。
   forceInitialToolName: null
   # 可选：为有明确上限的自动化流程，在前 N 个工具回合强制继续；N=0 关闭。
   forceSyntheticToolChoiceTurns: 0

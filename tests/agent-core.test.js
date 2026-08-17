@@ -58,10 +58,24 @@ test('Codex Responses built-in tools are ignored while unknown types remain inva
         { type: 'web_search_preview' },
         sampleTools()[0],
         { type: 'computer_use_preview' },
-        { type: 'namespace', name: 'mcp__example__' }
+        {
+            type: 'namespace',
+            name: 'container',
+            tools: [{
+                type: 'function',
+                name: 'shell_command',
+                description: 'Run a bounded command',
+                parameters: {
+                    type: 'object',
+                    properties: { command: { type: 'string' } },
+                    required: ['command'],
+                    additionalProperties: false
+                }
+            }]
+        }
     ], { ignoreUnsupportedBuiltinTools: true });
 
-    assert.deepEqual(tools.map(tool => tool.name), ['read_file']);
+    assert.deepEqual(tools.map(tool => tool.name), ['read_file', 'shell_command']);
     expectAgentCode(
         () => normalizeToolDefinitions([{ type: 'vendor_specific_tool' }], {
             ignoreUnsupportedBuiltinTools: true

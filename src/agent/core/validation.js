@@ -19,10 +19,11 @@ const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const TOOL_NAME_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 // Codex and other Responses API clients advertise provider-side tools together
-// with their function tools.  WebAI2API cannot execute those provider-side
-// tools, but they should not prevent an otherwise valid request from reaching
-// the model.  Keep this list explicit so arbitrary malformed tool types still
-// fail validation instead of being silently accepted.
+// with their function tools. WebAI2API cannot execute provider-side tools, but
+// it can expose ordinary functions. Namespace entries are expanded below so
+// Codex's real shell/file tools are not lost; the remaining provider-side
+// types are ignored. Keep this list explicit so arbitrary malformed tool types
+// still fail validation instead of being silently accepted.
 export const IGNORABLE_OPENAI_BUILTIN_TOOL_TYPES = Object.freeze([
     'code_interpreter',
     'computer_use',
@@ -223,9 +224,13 @@ export function normalizeToolDefinitions(rawTools, options = {}) {
         : null;
     const normalizedTools = [];
 
-    rawTools.forEach((tool, index) => {
-        if (ignoredBuiltinTypes?.has(tool?.type)) return;
-        const normalized = normalizeToolDefinition(tool, index, limits);
+    const appendNormalizedTool = normalized => {
+        if (normalizedTools.length >= limits.maxTools) {
+            throw new AgentError(
+                AGENT_ERROR_CODES.STATE_LIMIT,
+                `tools exceeds the maximum count of ${limits.maxTools}`
+            );
+        }
         if (names.has(normalized.name)) {
             throw new AgentError(
                 AGENT_ERROR_CODES.INVALID_TOOL_DEFINITION,
@@ -234,6 +239,24 @@ export function normalizeToolDefinitions(rawTools, options = {}) {
         }
         names.add(normalized.name);
         normalizedTools.push(normalized);
+    };
+
+    rawTools.forEach((tool, index) => {
+        if (ignoredBuiltinTypes && tool?.type === 'namespace') {
+            // Responses namespace wrappers contain function definitions. The
+            // synthetic compatibility layer only understands flat functions,
+            // so expand the children while preserving their original names.
+            if (!Array.isArray(tool.tools)) return;
+            tool.tools.forEach((nestedTool, nestedIndex) => {
+                if (ignoredBuiltinTypes.has(nestedTool?.type)) return;
+                appendNormalizedTool(
+                    normalizeToolDefinition(nestedTool, `${index}.tools[${nestedIndex}]`, limits)
+                );
+            });
+            return;
+        }
+        if (ignoredBuiltinTypes?.has(tool?.type)) return;
+        appendNormalizedTool(normalizeToolDefinition(tool, index, limits));
     });
 
     return normalizedTools;

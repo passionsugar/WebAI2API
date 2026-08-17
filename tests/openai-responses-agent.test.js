@@ -116,10 +116,25 @@ test('Responses accepts Codex built-in tools alongside function tools', () => {
         tools: [
             { type: 'web_search_preview' },
             readTool,
-            { type: 'file_search' }
+            { type: 'file_search' },
+            {
+                type: 'namespace',
+                name: 'container',
+                tools: [{
+                    type: 'function',
+                    name: 'shell_command',
+                    description: 'Run a bounded command',
+                    parameters: {
+                        type: 'object',
+                        properties: { command: { type: 'string' } },
+                        required: ['command'],
+                        additionalProperties: false
+                    }
+                }]
+            }
         ],
         stream: true
     }, modelOptions);
 
-    assert.deepEqual(request.tools.map(tool => tool.name), ['read_file']);
+    assert.deepEqual(request.tools.map(tool => tool.name), ['read_file', 'shell_command']);
 });
