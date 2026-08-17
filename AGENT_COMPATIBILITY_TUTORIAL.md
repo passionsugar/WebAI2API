@@ -77,7 +77,7 @@ agentCompatibility:
 - `maxSyntheticInstructionChars` 对系统/开发者说明做头尾截断，保留任务消息和工具结果，防止网页模型上下文被大型 skills 或 bootstrap 文件淹没。
 - Agent 默认使用临时 Chat，避免根 URL 恢复上一个线程后污染多轮协议；普通聊天仍使用原有 `backend.adapter.chatgpt_text.temporaryChat` 设置。
 
-隔离 Canary 的实测参数是 `temporaryChat=true`、`forceInitialToolChoice=false`、`forceSyntheticToolChoiceTurns=6`、`maxSyntheticToolRetries=2`、`retrySyntheticAutoFinal=true`、`maxSyntheticInstructionChars=30000`。生产默认不启用。
+隔离 Canary 的实测参数是 `temporaryChat=true`、`forceInitialToolChoice=false`、`forceSyntheticToolChoiceTurns=6`、`maxSyntheticToolRetries=2`、`retrySyntheticAutoFinal=true`、`maxSyntheticInstructionChars=30000`。仓库默认样例仍关闭 Agent；当前部署实例按同一兼容层配置启用，实际模型和网页账户仍需单独验证。
 
 ## 6. 浏览器适配与 OpenClaw 验收
 
@@ -118,7 +118,7 @@ requires_openai_auth = false
 
 - 工具名必须来自本轮声明集合；参数必须是对象并按 JSON Schema 校验；拒绝对象污染键；
 - 历史只在成功 Agent 回合后写入，受 TTL 和数量上限约束；
-- Canary 使用独立容器、数据目录、浏览器 profile、端口和 OpenClaw profile；生产端口 3000 与默认 OpenClaw gateway 不参与试验；
+- Canary 使用独立容器、数据目录、浏览器 profile、端口和 OpenClaw profile；生产端口 3000 使用独立的生产容器和原有数据挂载，默认 OpenClaw gateway 未被重启或改配置；
 - 生产切换前保存原镜像、配置哈希、profile 备份和回滚命令；
 - 日志只记录策略、计数、状态和安全诊断，不记录完整提示词、工具参数或凭据。
 
@@ -131,16 +131,16 @@ npm test
 git diff --check
 ```
 
-当前回归为 **43/43**，覆盖 IR、Schema、状态机、Chat/Responses 路由、队列、策略、解析器、选择约束、空响应重试和指令截断。
+当前回归为 **46/46**，覆盖 IR、Schema、状态机、Chat/Responses 路由、队列、策略、解析器、选择约束、空响应重试、指令截断和网页工具参数中的非法反斜杠修复。
 
 建议发布顺序：
 
 1. 独立分支运行本地回归；
 2. 用独立 Codex CLI 做真实工具闭环；
 3. 在独立端口 Canary 上验证 Chat/Responses/OpenClaw；
-4. 核对生产健康接口、镜像和配置哈希没有变化；
+4. 核对生产健康接口、镜像和配置哈希，并保留旧容器回滚入口；
 5. 提交本分支并推送 GitHub，创建 Draft PR；
 6. 评审和生产门禁通过后再替换生产镜像；
-7. 生产切换前记录旧镜像、配置哈希和可执行回滚命令。
+7. 生产切换后再次做健康检查和真实 Agent 闭环，并记录旧镜像、配置哈希和可执行回滚命令。
 
 不要提交临时 runner、浏览器 profile、Cookie、Token、远端配置或任何凭据。

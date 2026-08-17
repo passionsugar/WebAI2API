@@ -40,10 +40,10 @@ Agent 本地执行真实工具 → tool result/function_call_output → WebAI2AP
 
 | 层级 | 结论 |
 | --- | --- |
-| 已验证 | `npm test` 43/43；legacy Chat、Chat Agent、Responses、SSE、队列和策略解析 fixture 通过 |
-| 已验证 | 隔离 Codex CLI Responses 闭环：真实失败测试、读取、修改、复测和 UUID 创建/回读 |
-| 已验证 | 隔离 OpenClaw profile/workspace 闭环：6 次真实 `exec`/`read`/`edit` 调用、失败修复后复测成功 |
-| 已验证网页路径 | 上述真实闭环使用 ChatGPT 网页适配器，测试记录中使用过 `gpt-instant` 和 `gpt-thinking` |
+| 已验证 | `npm test` 46/46；legacy Chat、Chat Agent、Responses、SSE、队列和策略解析 fixture 通过 |
+| 已验证 | 独立 Codex CLI 经生产 3000 Responses 闭环：真实失败测试、读取、修改、复测均完成，stdout 含 `CODEX_PRODUCTION_3000_OK` |
+| 已验证 | 隔离 OpenClaw profile/workspace 闭环：6 次真实 `exec`/`read`/`edit` 调用、失败修复后复测成功；这是 Canary 证据，不等同于每个生产账户均已验证 |
+| 已验证网页路径 | Codex 生产复测使用 ChatGPT `gpt-thinking`；此前 Canary 记录还使用过 `gpt-instant` |
 | 理论兼容 | Qwen Hermes/Qwen3-Coder、Gemini-like、Anthropic-like 及其他 OpenAI-compatible Agent |
 | 未验证 | Claude Code、真实 Qwen/Gemini/Claude 网页工具闭环、所有原版适配器的 Agent 兼容、并行工具执行 |
 
