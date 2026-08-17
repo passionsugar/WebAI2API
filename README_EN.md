@@ -21,9 +21,9 @@ The added layer preserves `tools`, `tool_choice`, `tool_calls`, `tool_call_id`, 
 
 | Level | Evidence |
 | --- | --- |
-| Verified | `npm test` 43/43, including legacy chat, Chat Agent, Responses, SSE, queue, and parser fixtures |
-| Verified | Isolated Codex CLI Responses loop with a real failing test, read, edit, retest, and UUID file round trip |
-| Verified | Isolated OpenClaw profile/workspace loop with six real `exec`/`read`/`edit` calls and a successful repair |
+| Verified | `npm test` 46/46, including legacy chat, Chat Agent, Responses, SSE, queue, and parser fixtures |
+| Verified | Standalone Codex CLI loop through the production port 3000: real failing test, read, edit, retest, with `CODEX_PRODUCTION_3000_OK` on successful runs |
+| Verified | Isolated OpenClaw profile/workspace loop with six real `exec`/`read`/`edit` calls and a successful repair; this is Canary evidence, not a claim about every production account |
 | Verified web path | The real loops used the ChatGPT web adapter; `gpt-instant` and `gpt-thinking` were used in the recorded runs |
 | Theory/code-level only | Qwen, Gemini, Anthropic strategies and other OpenAI-compatible Agent clients |
 | Not verified | Claude Code, real Qwen/Gemini/Claude web tool loops, every inherited adapter in Agent mode, and parallel execution |
