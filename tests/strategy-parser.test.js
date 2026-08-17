@@ -57,6 +57,13 @@ test('OpenAI-like parser only accepts its exact tagged envelope', () => {
     assert.equal(ordinaryJson.items[0].type, 'message');
 });
 
+test('OpenAI-like parser repairs unescaped backslashes inside string arguments', () => {
+    const result = parseToolOutput('openai_style_synthetic',
+        String.raw`<agent_tool_call nonce="nonce_test">{"name":"read_file","arguments":{"path":"C:\work\src"}}</agent_tool_call>`,
+        parserContext());
+    assert.equal(result.items[0].arguments.path, 'C:\\work\\src');
+});
+
 test('Qwen Hermes parser supports official object arguments and rejects unknown tools', () => {
     const result = parseToolOutput('qwen_hermes',
         '<tool_call>\n{"name":"read_file","arguments":{"path":"package.json"}}\n</tool_call>',

@@ -11,11 +11,79 @@ function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function repairJsonStringEscapes(value) {
+    let repaired = '';
+    let inString = false;
+
+    for (let index = 0; index < value.length; index++) {
+        const character = value[index];
+        if (!inString) {
+            repaired += character;
+            if (character === '"') inString = true;
+            continue;
+        }
+
+        if (character === '"') {
+            repaired += character;
+            inString = false;
+            continue;
+        }
+
+        if (character === '\\') {
+            const next = value[index + 1];
+            if ('"\\/bfnrt'.includes(next || '')) {
+                repaired += `\\${next}`;
+                index++;
+                continue;
+            }
+            if (next === 'u') {
+                const hex = value.slice(index + 2, index + 6);
+                if (/^[0-9a-f]{4}$/i.test(hex)) {
+                    repaired += `\\u${hex}`;
+                    index += 5;
+                    continue;
+                }
+            }
+            // Web models frequently emit a Windows path or a regex with an
+            // unescaped backslash inside a JSON string. Preserve that literal
+            // character by escaping only the offending slash; the parsed
+            // payload still goes through the normal tool allowlist/schema checks.
+            repaired += '\\\\';
+            continue;
+        }
+
+        if (character === '\n') {
+            repaired += '\\n';
+        } else if (character === '\r') {
+            repaired += '\\r';
+        } else if (character === '\t') {
+            repaired += '\\t';
+        } else {
+            repaired += character;
+        }
+    }
+
+    return repaired;
+}
+
 function parsePayload(raw, label) {
     const trimmed = raw.trim();
     try {
         return JSON.parse(trimmed);
     } catch (error) {
+        // Synthetic web output is not a native JSON transport. A common
+        // provider defect is a valid envelope whose string argument contains
+        // a Windows path/regex with an unescaped backslash or line break. Apply
+        // a narrow, string-only repair before rejecting the tool call; schema
+        // and declared-tool validation remain mandatory after parsing.
+        const repaired = repairJsonStringEscapes(trimmed);
+        if (repaired !== trimmed) {
+            try {
+                return JSON.parse(repaired);
+            } catch {
+                // Preserve the original parse diagnostic below.
+            }
+        }
         throw new AgentError(
             AGENT_ERROR_CODES.MALFORMED_TOOL_CALL,
             `${label} contains invalid JSON: ${error.message}`
